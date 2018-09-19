@@ -35,6 +35,7 @@ for i in range(0,T):
     dat = true_template * amp_true + np.random.randn(n) * noise
     # Calculate the standard deviation of the data
     sig_est = np.std(dat)
+    Ninv = 1.0 / sig_est**2
     err[i] = sig_est
     # Our fitting template (for simplicity of fit, we assume we know x0 and sig)
     fit_template = np.exp(-0.5 * (x - x0)**2 / sig**2)
