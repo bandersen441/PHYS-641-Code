@@ -61,7 +61,7 @@ print amp
 plt.clf();
 #plt.plot(x, dat);
 plt.scatter(x, dat, c='red', marker='o', s=10, linewidth=0.5, edgecolor='black', label="Data Points")
-plt.plot(x, amp[0] * np.exp(-0.5 * (x - x0)**2 / sig**2), c='blue', label="Example Fit")
+plt.plot(x, amp[-1] * np.exp(-0.5 * (x - x0)**2 / sig**2), c='blue', label="Example Fit")
 plt.title('Raw Data Plot')
 plt.xlim((-10, 10))
 plt.xlabel("x Value")
