@@ -1,0 +1,132 @@
+# Bridget Andersen, 10/2/18
+# PHYS 641, Problem Set #2
+####################### PROBLEM 3 #######################
+# This script generates random correlated data by taking the eigenvalue/vector
+# decomposition of the noise matrix and multiplying uncorrelated data
+# according to that decomposition. We use this to generate many realizations
+# of data and show that they average to the noise matrix.
+#########################################################
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import rc,rcParams
+from matplotlib.ticker import ScalarFormatter
+
+rc('font',**{'family':'serif','serif':['Times']})
+rcParams['xtick.labelsize'] = 16
+rcParams['ytick.labelsize'] = 16
+rc('text', usetex=True)
+fs=18
+ms = 2
+lw = 2
+
+# This function creates an instance of the nxn noise matrix specified in the problem
+def N_generator(n):
+    return np.ones((n, n)) + np.eye(n)
+
+# This function generates a 2D matrix of uncorrelated gaussian random noise
+def uncorr_data(n, n_data):
+    return np.random.randn(n, n_data)
+
+# This function takes in matrix N and returns the eigenvalue/vector decomposition
+# where N = VLV^-1. The columns of V are the eigenvectors of N and L is a diagonal
+# matrix with the eigenvalues of N on the diagonal
+def e_decomp(N):
+    e, v = np.linalg.eigh(N)
+    e = e.real
+    v = v.real
+    print len(e)
+    print e
+    # Check to make sure that the generated noise matrix is positive semi-definite
+    print "Minimum eigenvalue: " + str(e.min())
+    print "Maximum eigenvalue: " + str(e.max())
+    psd = (e.min() > 0) and (e.max() > 0)
+    print "N is positive semi-definite?", psd, "\n"
+    if not psd:
+        print "Noise matrix N is not positive semi-definite!"
+        exit()
+    # Create V matrix
+    V = np.array(v)
+    # Create the L matrix
+    L = np.diag(e)
+    return V, L
+
+if __name__ == '__main__':
+    print "Problem #3\n"
+    # Set the size of the matrices (and data sequences) in this problem
+    n = 50
+    # Set the number of datasets to average
+    n_data = 5000
+
+    # Create the noise matrix
+    N = N_generator(n)
+    # M = np.random.randn(n,n)
+    # N = np.dot(M.transpose(), M) 
+    
+    uncorr_data = uncorr_data(n, n_data)
+    V, L = e_decomp(N)
+    # Compute the transformation to apply to the uncorrelated data
+    T = np.dot(V, np.sqrt(L))
+    # Apply to the data
+    corr_data = np.dot(T, uncorr_data)
+
+    # Plot the uncorrelated and correlated data
+    x = range(0,len(uncorr_data[0]))
+    plt.plot(x, uncorr_data[0], color='red', linestyle='-', linewidth=lw, zorder=1, alpha=0.5, label='Uncorrelated Data')
+    plt.plot(x, corr_data[0], color='blue', linestyle='-', linewidth=lw, zorder=1, alpha=0.5, label='Correlated Data')
+    plt.title("Eigenvalue Decomposition")
+    plt.gca().set_xlabel(r'x',fontsize=fs,fontweight='bold')
+    plt.gca().set_ylabel(r'y',fontsize=fs,fontweight='bold')
+    plt.gca().set_xlim([0.0,len(uncorr_data[0])])
+    plt.gca().legend(loc='upper right')
+    plt.tight_layout()
+    plt.savefig('prob3_data.pdf', format='pdf', dpi=1000)
+    plt.clf()
+    
+    # Average over many datasets and show that we recover the original noise matrix
+    avg_N = np.dot(corr_data, corr_data.transpose()) / n_data
+    print "Eigenvalue Decomposition Result"
+    print "The average error between the two matrices is:", np.mean(np.abs(avg_N - N)), "out of an average value of", np.mean(np.abs(N)), "\n"
+
+    # Plot the original and averaged noise matrices
+    fig = plt.figure()
+    fig.suptitle("Eigenvalue Decomposition",fontsize=fs,fontweight='bold')
+    ax1 = plt.subplot(1, 2, 1)
+    ax1.imshow(N)
+    ax1.set_title("Original N")
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.imshow(avg_N)
+    ax2.set_title("Averaged N")
+    plt.savefig('prob3_ev_N_compare.pdf', format='pdf', dpi=1000)
+    plt.clf()
+
+    # Compare this to to Cholesky decomposition result
+    L = np.linalg.cholesky(N)
+    corr_data = np.dot(L, uncorr_data)
+    avg_N = np.dot(corr_data, corr_data.transpose()) / n_data
+    print "Cholesky Decomposition Result"
+    print "The average error between the two matrices is:", np.mean(np.abs(avg_N - N)), "out of an average value of", np.mean(np.abs(N))
+    # Plot the data
+    plt.plot(x, uncorr_data[0], color='red', linestyle='-', linewidth=lw, zorder=1, alpha=0.5, label='Uncorrelated Data')
+    plt.plot(x, corr_data[0], color='blue', linestyle='-', linewidth=lw, zorder=1, alpha=0.5, label='Correlated Data')
+    plt.title("Cholesky Decomposition")
+    plt.gca().set_xlabel(r'x',fontsize=fs,fontweight='bold')
+    plt.gca().set_ylabel(r'y',fontsize=fs,fontweight='bold')
+    plt.gca().set_xlim([0.0,len(uncorr_data[0])])
+    plt.gca().legend(loc='upper right')
+    plt.tight_layout()
+    plt.savefig('prob3_data_chol.pdf', format='pdf', dpi=1000)
+    plt.clf()
+
+    # Plot the original and averaged noise matrices
+    fig = plt.figure()
+    fig.suptitle("Cholesky Decomposition",fontsize=fs,fontweight='bold')
+    ax1 = plt.subplot(1, 2, 1)
+    ax1.imshow(N)
+    ax1.set_title("Original N")
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.imshow(avg_N)
+    ax2.set_title("Averaged N")
+    plt.savefig('prob3_chol_N_compare.pdf', format='pdf', dpi=1000)
+
+    
+    
